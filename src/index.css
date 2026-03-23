@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 html,
@@ -12,22 +12,23 @@ body {
 body {
   font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial,
     "Apple Color Emoji", "Segoe UI Emoji";
-  background: radial-gradient(1200px 700px at 20% 10%, rgba(0, 122, 255, 0.24), transparent 60%),
-    radial-gradient(900px 520px at 80% 30%, rgba(224, 242, 241, 0.14), transparent 55%),
-    #002347;
+  background: #f8fafc;
+  color: #0f172a;
 }
 
 /* 玻璃拟态基础 */
 .glass {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(148, 163, 184, 0.28);
   backdrop-filter: blur(14px);
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.16);
 }
 
 .glass-strong {
-  background: rgba(255, 255, 255, 0.10);
+  background: rgba(255, 255, 255, 0.7);
   border: 1px solid rgba(0, 122, 255, 0.25);
   backdrop-filter: blur(16px);
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.2);
 }
 
 /* 图片边缘渐隐（Module2 用） */
@@ -42,4 +43,122 @@ body {
 .hide-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
+/* Module 1: 对齐旧版静态样式 */
+.legacy-m1-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.legacy-m1-card {
+  border-radius: 12px;
+  border: 1px solid rgba(37, 99, 235, 0.16);
+  background: linear-gradient(135deg, rgba(0, 122, 255, 0.18), rgba(255, 255, 255, 0.92) 22%);
+  padding: 1px;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.1);
+}
+
+.legacy-m1-inner {
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 20px;
+}
+
+.legacy-m1-title {
+  margin: 0;
+  text-align: center;
+  font-size: 24px;
+  line-height: 1.35;
+  font-weight: 650;
+  color: #2563eb;
+}
+
+.legacy-m1-desc {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.legacy-m1-desc-row {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  gap: 10px;
+}
+
+.legacy-m1-desc-label {
+  font-size: 12px;
+  color: rgba(55, 65, 81, 0.55);
+  font-weight: 650;
+}
+
+.legacy-m1-desc-value {
+  font-size: 12px;
+  color: rgba(55, 65, 81, 0.55);
+  line-height: 1.55;
+}
+
+.legacy-m1-accordion {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.legacy-m1-acc2 {
+  border: 1px solid rgba(37, 99, 235, 0.18);
+  border-radius: 10px;
+  background-color: rgba(37, 99, 235, 0.06);
+  overflow: hidden;
+}
+
+.legacy-m1-acc2-summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 12px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.legacy-m1-acc2-summary::-webkit-details-marker {
+  display: none;
+}
+
+.legacy-m1-acc2-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.legacy-m1-acc2-title {
+  font-size: 16px;
+  font-weight: 650;
+  color: #111827;
+}
+
+.legacy-m1-acc2-subtitle,
+.legacy-m1-acc2-hint {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.legacy-m1-acc2-body {
+  padding: 0 12px 12px 12px;
+}
+
+@media (max-width: 980px) {
+  .legacy-m1-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .legacy-m1-cards {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 
