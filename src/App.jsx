@@ -66,6 +66,26 @@ function openScienceModule(setVisible) {
   }, 30);
 }
 
+/** 注射日期计算器（与原先可用链接一致；手机端用同页跳转代替新窗口） */
+const INJECTION_CALCULATOR_URL = "http://idate.top/gft.html";
+
+/**
+ * 打开外链：触屏设备用同页跳转（iOS Safari 常拦截 `target=_blank`）；鼠标设备新开标签
+ * @param {string} url
+ * @returns {void}
+ */
+function openExternalUrl(url) {
+  const coarse =
+    typeof window !== "undefined" &&
+    window.matchMedia &&
+    window.matchMedia("(pointer: coarse)").matches;
+  if (coarse) {
+    window.location.assign(url);
+    return;
+  }
+  window.open(url, "_blank", "noopener,noreferrer");
+}
+
 /**
  * @param {string} text
  * @returns {Array<{label: string, value: string}>}
@@ -656,16 +676,16 @@ export default function App() {
           <div className="order-2 flex h-full flex-col justify-center rounded-3xl bg-white p-6 shadow-xl ring-1 ring-slate-200 md:rounded-l-none md:p-10">
             <div className="mt-2 text-2xl font-bold text-[#007AFF] md:text-3xl">创新药使用指南</div>
 
-            <div className="mt-6 flex flex-wrap gap-3">
-              <a
-                className="group inline-flex items-center gap-2 rounded-lg border border-blue-100 bg-blue-50 px-5 py-3 text-sm font-semibold text-blue-900 transition-colors hover:bg-blue-600 hover:text-white active:bg-blue-600 active:text-white"
-                href="http://idate.top/gft.html"
-                target="_blank"
-                rel="noreferrer noopener"
+            <div className="mt-6 flex flex-col gap-2">
+              <div className="flex flex-wrap gap-3">
+              <button
+                type="button"
+                className="group inline-flex cursor-pointer items-center gap-2 rounded-lg border border-blue-100 bg-blue-50 px-5 py-3 text-left text-sm font-semibold text-blue-900 transition-colors hover:bg-blue-600 hover:text-white active:bg-blue-600 active:text-white"
+                onClick={() => openExternalUrl(INJECTION_CALCULATOR_URL)}
               >
                 <ExternalLink className="h-4 w-4 shrink-0 text-blue-900 group-hover:text-white group-active:text-white" aria-hidden />
                 打开注射日期计算器
-              </a>
+              </button>
               <button
                 type="button"
                 className="group inline-flex items-center gap-2 rounded-lg border border-blue-100 bg-blue-50 px-5 py-3 text-sm font-semibold text-blue-900 transition-colors hover:bg-blue-600 hover:text-white active:bg-blue-600 active:text-white"
@@ -674,6 +694,11 @@ export default function App() {
                 <ArrowLeft className="h-4 w-4 shrink-0 text-blue-900 group-hover:text-white group-active:text-white" aria-hidden />
                 返回保障科普
               </button>
+              </div>
+              <p className="text-xs text-slate-400">
+                手机端若未跳转，多为系统限制新窗口；已改为当前页打开。仍无法打开时，请复制链接到浏览器：
+                <span className="select-all font-mono text-slate-500"> {INJECTION_CALCULATOR_URL}</span>
+              </p>
             </div>
           </div>
         </div>
@@ -689,6 +714,7 @@ export default function App() {
     </div>
   );
 }
+
 
 
 
