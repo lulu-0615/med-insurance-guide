@@ -157,9 +157,18 @@ function parseDateInput(input) {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate());
 }
 
-/** 莫妥珠单抗维持期 CR/PR 缓解提醒（临床备注） */
-const MOSUN_CR_PR_NOTE =
-  "达到完全缓解（CR）或部分缓解（PR）后，按每 3 周一次 30mg 维持；需结合影像学、实验室与症状评估，出现疾病进展或不可耐受毒性时及时调整方案，并严格遵循说明书与主治医嘱。";
+/** 格菲妥珠单抗：第1行（预处理）备注 */
+const GLOFIT_NOTE_ROW1 =
+  "奥妥珠单抗预处理（若与GemOx联用，于第2天给予GemOx）。";
+
+/** 格菲妥珠单抗：第4-10行（方案备注） */
+const GLOFIT_NOTE_ROW4_10 = "或与GemOx联用";
+
+/** 莫妥珠单抗：第10行备注（达到 CR 则停止） */
+const MOSUN_NOTE_ROW10_CR = "若本次治疗后达到CR（完全缓解），则停止莫妥珠单抗给药。";
+
+/** 莫妥珠单抗：第11-19行备注（PR/SD 则持续至第17周期） */
+const MOSUN_NOTE_ROW11_19_PR_SD = "若第8周期后达到PR/SD,继续治疗至第17个周期。";
 
 /** 维泊妥珠第 6 周期 R-CHP 联合给药说明 */
 const POLA_RCHP_CYCLE6_NOTE =
@@ -177,54 +186,60 @@ function generateSchedule(drug, plan, startDate) {
   const rows = [];
 
   if (drug === "glofit") {
-    rows.push({ index: 1, desc: "预处理（第1天）", date: cloneDate(base), dose: "—", note: "" });
-    rows.push({ index: 2, desc: "第1次给药（1周后）", date: addWeeks(base, 1), dose: "2.5mg", note: "" });
-    rows.push({ index: 3, desc: "第2次给药（2周后）", date: addWeeks(base, 2), dose: "10mg", note: "" });
-    rows.push({ index: 4, desc: "第3次给药（3周后）", date: addWeeks(base, 3), dose: "30mg", note: "" });
+    rows.push({ index: 1, desc: "预处理（第1天）", date: cloneDate(base), dose: "", note: GLOFIT_NOTE_ROW1 });
+    rows.push({ index: 2, desc: "1周后", date: addWeeks(base, 1), dose: "2.5mg", note: "" });
+    rows.push({ index: 3, desc: "2周后", date: addWeeks(base, 2), dose: "10mg", note: "" });
+    rows.push({ index: 4, desc: "3周后", date: addWeeks(base, 3), dose: "30mg", note: GLOFIT_NOTE_ROW4_10 });
+
     let d = addWeeks(base, 3);
     for (let i = 5; i <= 13; i++) {
       d = addDays(d, 21);
       rows.push({
         index: i,
-        desc: `第${i}次给药（每21天）`,
+        desc: "间隔3周",
         date: cloneDate(d),
         dose: "30mg",
-        note: i >= 11 ? "单药" : ""
+        note: i <= 10 ? GLOFIT_NOTE_ROW4_10 : "单药"
       });
     }
     return rows;
   }
 
   if (drug === "mosun") {
-    rows.push({ index: 1, desc: "起始给药", date: cloneDate(base), dose: "1mg", note: "" });
-    rows.push({ index: 2, desc: "第2次给药（1周后）", date: addWeeks(base, 1), dose: "2mg", note: "" });
-    rows.push({ index: 3, desc: "第3次给药（2周后）", date: addWeeks(base, 2), dose: "60mg", note: "" });
-    rows.push({ index: 4, desc: "第4次给药（3周后）", date: addWeeks(base, 3), dose: "60mg", note: "" });
+    rows.push({ index: 1, desc: "起始", date: cloneDate(base), dose: "1mg", note: "" });
+    rows.push({ index: 2, desc: "1周后", date: addWeeks(base, 1), dose: "2mg", note: "" });
+    rows.push({ index: 3, desc: "2周后", date: addWeeks(base, 2), dose: "60mg", note: "" });
+    rows.push({ index: 4, desc: "3周后", date: addWeeks(base, 3), dose: "60mg", note: "" });
+
     let d = addWeeks(base, 3);
-    for (let i = 5; i <= 13; i++) {
+    for (let i = 5; i <= 19; i++) {
       d = addDays(d, 21);
+      let note = "";
+      if (i === 10) note = MOSUN_NOTE_ROW10_CR;
+      if (i >= 11) note = MOSUN_NOTE_ROW11_19_PR_SD;
+
       rows.push({
         index: i,
-        desc: `第${i}次给药（每3周，30mg）`,
+        desc: "每3周",
         date: cloneDate(d),
         dose: "30mg",
-        note: MOSUN_CR_PR_NOTE
+        note
       });
     }
     return rows;
   }
 
   if (drug === "pola") {
-    rows.push({ index: 1, desc: "起始给药", date: cloneDate(base), dose: "1.8mg/kg", note: "" });
+    rows.push({ index: 1, desc: "起始", date: cloneDate(base), dose: "", note: "" });
     let d = cloneDate(base);
     for (let i = 2; i <= 6; i++) {
       d = addDays(d, 21);
       const isSix = i === 6;
       rows.push({
         index: i,
-        desc: `第${i}次给药（间隔3周）`,
+        desc: "每3周",
         date: cloneDate(d),
-        dose: "1.8mg/kg",
+        dose: "",
         note: isSix ? POLA_RCHP_CYCLE6_NOTE : ""
       });
     }
@@ -232,23 +247,21 @@ function generateSchedule(drug, plan, startDate) {
   }
 
   if (drug === "obinutuzumab") {
-    const dose = "1000mg";
-    rows.push({ index: 1, desc: "起始给药", date: cloneDate(base), dose, note: "" });
-    rows.push({ index: 2, desc: "第2次给药（1周后）", date: addWeeks(base, 1), dose, note: "" });
-    rows.push({ index: 3, desc: "第3次给药（2周后）", date: addWeeks(base, 2), dose, note: "" });
-    rows.push({ index: 4, desc: "第4次给药（3周后）", date: addWeeks(base, 3), dose, note: "" });
+    rows.push({ index: 1, desc: "起始", date: cloneDate(base), dose: "", note: "" });
+    rows.push({ index: 2, desc: "1周后", date: addWeeks(base, 1), dose: "", note: "" });
+    rows.push({ index: 3, desc: "2周后", date: addWeeks(base, 2), dose: "", note: "" });
+    rows.push({ index: 4, desc: "3周后", date: addWeeks(base, 3), dose: "", note: "" });
 
     if (plan === "G-CHOP" || plan === "G-CVP") {
       let d = addWeeks(base, 3);
       for (let i = 5; i <= 10; i++) {
         d = addDays(d, 21);
-        const single = i >= 9;
         rows.push({
           index: i,
-          desc: `第${i}次给药（每3周，${i - 4}/6）`,
+          desc: "每3周",
           date: cloneDate(d),
-          dose,
-          note: single ? "奥妥珠单抗单药" : ""
+          dose: "",
+          note: i >= 9 ? "单药" : ""
         });
       }
       d = cloneDate(rows[rows.length - 1].date);
@@ -256,9 +269,9 @@ function generateSchedule(drug, plan, startDate) {
         d = addMonths(d, 2);
         rows.push({
           index: i,
-          desc: `第${i}次给药（每2个月维持）`,
+          desc: "每2个月",
           date: cloneDate(d),
-          dose,
+          dose: "",
           note: "单药维持"
         });
       }
@@ -271,9 +284,9 @@ function generateSchedule(drug, plan, startDate) {
         d = addDays(d, 28);
         rows.push({
           index: i,
-          desc: `第${i}次给药（每4周）`,
+          desc: "每4周",
           date: cloneDate(d),
-          dose,
+          dose: "",
           note: ""
         });
       }
@@ -282,9 +295,9 @@ function generateSchedule(drug, plan, startDate) {
         d = addMonths(d, 2);
         rows.push({
           index: i,
-          desc: `第${i}次给药（每2个月维持）`,
+          desc: "每2个月",
           date: cloneDate(d),
-          dose,
+          dose: "",
           note: "单药维持"
         });
       }
@@ -299,20 +312,26 @@ function generateSchedule(drug, plan, startDate) {
  * @param {{ dose: string, note: string }} props
  */
 function DoseAndNoteCell({ dose, note }) {
-  const hasNote = Boolean(note && note.trim());
-  const isLongClinical = hasNote && note.length > 48;
+  const hasDose = Boolean(dose && String(dose).trim());
+  const hasNote = Boolean(note && String(note).trim());
+
+  const noteText = hasNote ? String(note) : "";
+  const isLongClinical = hasNote && noteText.length > 70;
+  const isKeyNote = noteText === "单药" || noteText === "单药维持" || noteText === GLOFIT_NOTE_ROW4_10;
+
   return (
-    <div className="min-w-0 text-slate-800">
-      <span className="font-bold">{dose}</span>
+    <div className="min-w-0 text-left">
+      {hasDose ? <span className="font-bold text-[#3B82F6]">{dose}</span> : null}
       {hasNote ? (
-        <>
-          <span className="mx-1.5 inline-block w-px select-none" aria-hidden />
-          {isLongClinical ? (
-            <span className="text-[11px] font-normal italic leading-snug text-slate-600">{note}</span>
-          ) : (
-            <span className="font-bold">{note}</span>
-          )}
-        </>
+        <span
+          className={[
+            hasDose ? "ml-1.5" : "",
+            "inline-block text-[12px] leading-snug text-slate-400",
+            isLongClinical ? "italic font-normal" : isKeyNote ? "font-bold" : "font-normal"
+          ].join(" ")}
+        >
+          {noteText}
+        </span>
       ) : null}
     </div>
   );
@@ -338,38 +357,83 @@ function Module2Calculator() {
   /** @type {Array<DrugKey>} */
   const drugOrder = ["obinutuzumab", "pola", "glofit", "mosun"];
 
-  return (
-    <div className="flex min-h-0 flex-col">
-      <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">罗氏肿瘤药物注射计算器</div>
+  /** @type {React.MutableRefObject<HTMLDivElement|null>} */
+  const pillGridRef = useRef(null);
+  /** @type {Array<React.RefObject<HTMLButtonElement>>} */
+  const pillCellRefs = useMemo(
+    () => [React.createRef(), React.createRef(), React.createRef(), React.createRef()],
+    []
+  );
 
-      <div className="mt-4 grid grid-cols-2 gap-3">
-        {drugOrder.map((key) => {
-          const active = drug === key;
-          return (
-            <button
-              key={key}
-              type="button"
-              onClick={() => setDrug(key)}
-              className={[
-                "rounded-2xl border px-3 py-3 text-left text-sm font-semibold transition-colors duration-200",
-                active
-                  ? "border-[#3B82F6] bg-[#3B82F6] text-white shadow-md"
-                  : "border-slate-200 bg-white text-slate-700 hover:border-slate-300"
-              ].join(" ")}
-            >
-              {DRUG_LABELS[key]}
-            </button>
-          );
-        })}
+  const activeDrugIdx = drugOrder.indexOf(drug);
+  const [slider, setSlider] = useState({ x: 0, y: 0, w: 0, h: 0 });
+
+  useEffect(() => {
+    const measure = () => {
+      const grid = pillGridRef.current;
+      const cell = pillCellRefs[activeDrugIdx]?.current;
+      if (!grid || !cell) return;
+      setSlider({
+        x: cell.offsetLeft,
+        y: cell.offsetTop,
+        w: cell.offsetWidth,
+        h: cell.offsetHeight
+      });
+    };
+
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [activeDrugIdx, pillCellRefs]);
+
+  return (
+    <div className="flex min-h-0 flex-col font-sans">
+      <div className="text-xs font-semibold tracking-wide text-slate-500">罗氏肿瘤药物注射计算器</div>
+
+      {/* Pill Toggle：2x2 */}
+      <div className="mt-4">
+        <div className="relative rounded-3xl bg-[rgba(59,130,246,0.06)] p-1">
+          <div ref={pillGridRef} className="relative grid grid-cols-2 gap-1">
+            <div
+              aria-hidden
+              className="absolute rounded-2xl bg-[#3B82F6] shadow-md transition-transform duration-300 ease-out"
+              style={{
+                left: 0,
+                top: 0,
+                width: slider.w || 0,
+                height: slider.h || 0,
+                transform: `translate(${slider.x}px, ${slider.y}px)`
+              }}
+            />
+
+            {drugOrder.map((key, idx) => {
+              const active = drug === key;
+              return (
+                <button
+                  key={key}
+                  ref={pillCellRefs[idx]}
+                  type="button"
+                  onClick={() => setDrug(key)}
+                  className={[
+                    "relative z-10 flex items-center justify-center rounded-2xl px-3 py-3 text-sm font-semibold transition-colors duration-200",
+                    active ? "text-white" : "text-[#0B3D91] hover:text-[#007AFF]"
+                  ].join(" ")}
+                >
+                  {DRUG_LABELS[key]}
+                </button>
+              );
+            })}
+          </div>
+        </div>
       </div>
 
       <div className="mt-5 flex min-h-0 flex-col gap-3 sm:flex-row sm:items-end">
-        <label className="flex min-w-0 flex-1 flex-col gap-1.5 text-xs font-medium text-slate-600">
+        <label className="flex min-w-0 flex-1 flex-col gap-1 text-xs font-medium text-slate-600">
           用药方案
           <select
             value={plan}
             onChange={(e) => setPlan(e.target.value)}
-            className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-900 shadow-sm outline-none ring-tech-blue/0 transition focus:border-[#3B82F6] focus:ring-2 focus:ring-[#3B82F6]/25"
+            className="w-full border-0 border-b border-slate-300 bg-transparent px-1 pb-2 text-sm font-semibold text-slate-900 outline-none transition-colors focus:border-[#3B82F6]"
           >
             {plans.map((p) => (
               <option key={p} value={p}>
@@ -378,37 +442,54 @@ function Module2Calculator() {
             ))}
           </select>
         </label>
-        <label className="flex min-w-0 flex-1 flex-col gap-1.5 text-xs font-medium text-slate-600">
+
+        <label className="flex min-w-0 flex-1 flex-col gap-1 text-xs font-medium text-slate-600">
           首次用药日期
           <input
             type="date"
             value={firstDate}
             onChange={(e) => setFirstDate(e.target.value)}
-            className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-900 shadow-sm outline-none focus:border-[#3B82F6] focus:ring-2 focus:ring-[#3B82F6]/25"
+            className="w-full border-0 border-b border-slate-300 bg-transparent px-1 pb-2 text-sm font-semibold text-slate-900 outline-none transition-colors focus:border-[#3B82F6]"
           />
         </label>
       </div>
 
-      <div className="mt-4 min-h-0 flex-1 overflow-hidden rounded-xl border border-slate-200 bg-slate-50/80">
-        <div className="max-h-[min(420px,55vh)] overflow-auto">
-          <table className="w-full min-w-[520px] table-fixed border-collapse text-left text-sm">
-            <thead className="sticky top-0 z-10 bg-slate-100/95 text-xs font-semibold text-slate-600 backdrop-blur">
+      {/* Table */}
+      <div className="mt-4 min-h-0 flex-1 overflow-hidden rounded-2xl border border-slate-200/70 bg-[rgba(255,255,255,0.65)] backdrop-blur-[10px]">
+        <div className="max-h-[min(520px,56vh)] overflow-auto">
+          <table className="w-full min-w-[560px] border-collapse text-left text-sm">
+            <thead className="sticky top-0 z-10 bg-[#3B82F6] text-white">
               <tr>
-                <th className="w-10 px-2 py-2.5">#</th>
-                <th className="w-[22%] px-2 py-2.5">描述</th>
-                <th className="w-[18%] px-2 py-2.5">具体日期</th>
-                <th className="min-w-0 px-2 py-2.5">剂量与关键备注</th>
+                <th className="min-w-[72px] px-3 py-2.5 text-left text-xs font-bold">#</th>
+                <th className="px-3 py-2.5 text-left text-xs font-bold">描述</th>
+                <th className="w-[160px] px-3 py-2.5 text-left text-xs font-bold">具体日期</th>
+                <th className="min-w-[260px] px-3 py-2.5 text-left text-xs font-bold">剂量与关键备注</th>
               </tr>
             </thead>
             <tbody>
-              {schedule.map((row) => (
-                <tr key={row.index} className="border-t border-slate-200 bg-white/90">
-                  <td className="px-2 py-2 align-top text-slate-500">{row.index}</td>
-                  <td className="px-2 py-2 align-top text-slate-800">{row.desc}</td>
-                  <td className="whitespace-nowrap px-2 py-2 align-top font-mono text-xs text-slate-800">
+              {schedule.map((row, idx) => (
+                <tr
+                  key={row.index}
+                  className={[
+                    "border-t border-slate-200/60",
+                    idx % 2 === 0 ? "bg-white" : "bg-[rgba(59,130,246,0.03)]"
+                  ].join(" ")}
+                >
+                  {/* 时间轴 */}
+                  <td className="px-3 py-2 align-top">
+                    <div className="flex items-stretch gap-2">
+                      <div className="mt-1 h-full w-[2px] border-r-2 border-dashed border-[#93c5fd]/90" />
+                      <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#E8F4FF] text-xs font-bold text-[#007AFF]">
+                        {row.index}
+                      </div>
+                    </div>
+                  </td>
+
+                  <td className="px-3 py-2 align-top text-slate-800">{row.desc}</td>
+                  <td className="whitespace-nowrap px-3 py-2 align-top font-mono text-xs text-slate-700">
                     {formatDate(row.date)}
                   </td>
-                  <td className="min-w-0 px-2 py-2 align-top">
+                  <td className="min-w-0 px-3 py-2 align-top">
                     <DoseAndNoteCell dose={row.dose} note={row.note} />
                   </td>
                 </tr>
@@ -420,7 +501,7 @@ function Module2Calculator() {
 
       <button
         type="button"
-        className="mt-4 self-start rounded-lg border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
+        className="mt-4 self-start rounded-lg bg-white px-4 py-2 text-xs font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50"
         onClick={() => scrollToId("science")}
       >
         返回保障科普
@@ -897,9 +978,6 @@ export default function App() {
               }}
             />
             <div className="absolute inset-0 bg-gradient-to-l from-deep-navy/25 via-transparent to-transparent" />
-            <div className="absolute bottom-4 left-4 right-4 glass rounded-2xl p-4">
-              <div className="text-sm font-semibold">保障科普 · 一页看懂</div>
-            </div>
           </div>
         </div>
       </section>
@@ -996,7 +1074,7 @@ export default function App() {
       <Section id="drugs" className="pt-20">
         <div className="grid gap-6 md:min-h-[60vh] md:grid-cols-[3fr_7fr] md:items-stretch md:gap-0">
           <motion.div
-            className="order-1 max-h-56 overflow-hidden rounded-3xl ring-1 ring-white/10 md:max-h-none md:h-full md:rounded-r-none"
+            className="order-1 min-h-full overflow-visible rounded-3xl bg-[rgba(255,255,255,0.85)] backdrop-blur-[10px] shadow-[0_20px_50px_rgba(0,0,0,0.05)] md:h-full md:rounded-r-none"
             initial={{ opacity: 0, y: 18 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.35 }}
@@ -1005,18 +1083,15 @@ export default function App() {
             <img
               src="/assets/drugs_bg.jpg"
               alt="drugs background"
-              className="mask-fade-x aspect-video h-full max-h-52 w-full object-cover object-center md:max-h-[min(42vh,280px)] md:min-h-[200px]"
+              className="mask-fade-x h-full w-full object-contain object-center"
               onError={(e) => {
                 // 兜底：你没放 jpg 时仍能看到背景
                 e.currentTarget.src = "/assets/drugs_bg.svg";
               }}
             />
-            <div className="glass p-4">
-              <div className="text-sm font-semibold">医学节律 · 工具化体验</div>
-            </div>
           </motion.div>
 
-          <div className="order-2 flex min-h-0 flex-col rounded-3xl bg-white p-6 shadow-xl ring-1 ring-slate-200 md:rounded-l-none md:p-8">
+          <div className="order-2 flex min-h-0 flex-col rounded-3xl bg-[rgba(255,255,255,0.85)] p-6 backdrop-blur-[10px] shadow-[0_20px_50px_rgba(0,0,0,0.05)] md:rounded-l-none md:p-8">
             <div className="shrink-0 text-2xl font-bold text-[#007AFF] md:text-3xl">创新药使用指南</div>
             <div className="mt-5 min-h-0 flex-1">
               <Module2Calculator />
