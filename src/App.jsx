@@ -1074,7 +1074,7 @@ export default function App() {
           viewport={{ once: true, amount: 0.35 }}
           transition={{ duration: 0.55 }}
         >
-          <div className="shrink-0 basis-[30%] overflow-hidden">
+          <div className="shrink-0 basis-[45%] overflow-hidden">
             <img
               src="/assets/drugs_bg.jpg"
               alt="drugs background"
