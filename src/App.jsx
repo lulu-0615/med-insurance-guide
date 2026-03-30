@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion, useInView } from "framer-motion";
-import { ChevronRight, Copy, ExternalLink, HeartPulse, ShieldCheck, Sparkles } from "lucide-react";
+import { ChevronDown, Copy, ExternalLink, HeartPulse, ShieldCheck, Sparkles } from "lucide-react";
 import insuranceConfig from "../insurance_config.json";
 
 /**
@@ -386,7 +386,7 @@ function Module2Calculator() {
   }, [activeDrugIdx, pillCellRefs]);
 
   return (
-    <div className="flex min-h-0 flex-col font-sans">
+    <div className="flex min-h-0 min-w-0 flex-col font-sans">
       {/* Pill Toggle：2x2 */}
       <div>
         <div className="relative rounded-3xl bg-[rgba(59,130,246,0.06)] p-1">
@@ -452,14 +452,14 @@ function Module2Calculator() {
       </div>
 
       {/* Table */}
-      <div className="mt-4 min-h-0 flex-1 overflow-hidden rounded-2xl border border-slate-200/70 bg-[rgba(255,255,255,0.65)] backdrop-blur-[10px]">
+      <div className="mt-4 min-h-0 min-w-0 flex-1 overflow-hidden rounded-2xl border border-slate-200/70 bg-[rgba(255,255,255,0.65)] backdrop-blur-[10px]">
         <div className="max-h-[min(520px,56vh)] overflow-x-auto overflow-y-auto">
-          <table className="w-full min-w-[520px] border-collapse table-fixed text-left text-sm">
+          <table className="w-full min-w-[360px] sm:min-w-[520px] border-collapse table-fixed text-left text-xs sm:text-sm">
             <thead className="sticky top-0 z-10 bg-[#3B82F6] text-white">
               <tr>
                 <th className="w-[45px] px-2 py-2.5 text-left text-xs font-bold whitespace-nowrap">#</th>
-                <th className="min-w-[200px] w-[28%] px-2 py-2.5 text-left text-xs font-bold whitespace-nowrap">描述</th>
-                <th className="w-[150px] px-2 py-2.5 text-left text-xs font-bold whitespace-nowrap">具体日期</th>
+                <th className="min-w-[180px] w-[28%] px-2 py-2.5 text-left text-xs font-bold whitespace-nowrap">描述</th>
+                <th className="w-[130px] px-2 py-2.5 text-left text-xs font-bold whitespace-nowrap">具体日期</th>
                 <th className="px-2 py-2.5 text-left text-xs font-bold">剂量与关键备注</th>
               </tr>
             </thead>
@@ -822,34 +822,68 @@ function InsuranceTool({ data }) {
         <div key={m.id} className="legacy-m1-card">
           <div className="legacy-m1-inner">
             {m.description ? (
-              /** 预解析，避免在 JSX 中多次调用 parseL1Description */
               (() => {
                 const descRows = parseL1Description(m.description);
                 const expanded = Boolean(descExpanded[m.id]);
                 const showMore = descRows.length > 4;
                 const shown = expanded ? descRows : descRows.slice(0, 4);
+
                 return (
-                  <div className={["legacy-m1-head", !expanded && showMore ? "legacy-m1-head--collapsed" : ""].join(" ")}>
+                  <div className="legacy-m1-head">
                     <div className="legacy-m1-title">{m.title}</div>
-                    <div className="legacy-m1-desc">
+
+                    <div
+                      className={[
+                        "legacy-m1-desc legacy-m1-desc-rows",
+                        showMore ? (expanded ? "legacy-m1-desc-rows--expanded" : "legacy-m1-desc-rows--collapsed") : ""
+                      ].join(" ")}
+                    >
                       {shown.map((row, idx) => (
-                        <div key={idx} className="legacy-m1-desc-row">
+                        <div
+                          key={idx}
+                          className={[
+                            "legacy-m1-desc-row",
+                            showMore ? "legacy-m1-desc-row--clickable" : ""
+                          ].join(" ")}
+                          onClick={() => {
+                            if (!showMore) return;
+                            toggleDesc(m.id);
+                          }}
+                          role={showMore ? "button" : undefined}
+                          tabIndex={showMore ? 0 : undefined}
+                          onKeyDown={(e) => {
+                            if (!showMore) return;
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              toggleDesc(m.id);
+                            }
+                          }}
+                        >
                           <div className="legacy-m1-desc-label">{row.label}</div>
                           <div className="legacy-m1-desc-value">{row.value}</div>
+
+                          {showMore ? (
+                            <button
+                              type="button"
+                              className="legacy-m1-desc-arrow-btn"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleDesc(m.id);
+                              }}
+                              aria-label={expanded ? "收起详情" : "展开详情"}
+                            >
+                              <ChevronDown
+                                className={[
+                                  "h-4 w-4 transition-transform",
+                                  expanded ? "rotate-180" : "rotate-0"
+                                ].join(" ")}
+                                aria-hidden
+                              />
+                            </button>
+                          ) : null}
                         </div>
                       ))}
                     </div>
-
-                    {showMore ? (
-                      <button
-                        type="button"
-                        className="mt-2 inline-flex items-center gap-2 rounded-lg text-xs font-semibold text-blue-900 transition-colors hover:bg-blue-50 active:bg-blue-50"
-                        onClick={() => toggleDesc(m.id)}
-                      >
-                        {expanded ? "收起详情" : "展开详情"}
-                        <ChevronRight className={["h-4 w-4 transition-transform", expanded ? "rotate-90" : "rotate-0"].join(" ")} aria-hidden />
-                      </button>
-                    ) : null}
                   </div>
                 );
               })()
@@ -1102,7 +1136,7 @@ export default function App() {
       <Section id="drugs" className="pt-20">
         <div className="grid gap-6 md:min-h-[60vh] md:grid-cols-2 md:items-stretch md:gap-0">
           <motion.div
-            className="order-1 min-h-full overflow-visible rounded-3xl bg-[rgba(255,255,255,0.85)] backdrop-blur-[10px] shadow-[0_20px_50px_rgba(0,0,0,0.05)] md:h-full md:rounded-r-none"
+            className="order-1 min-h-full w-full overflow-visible rounded-3xl bg-[rgba(255,255,255,0.85)] backdrop-blur-[10px] shadow-[0_20px_50px_rgba(0,0,0,0.05)] md:h-full md:rounded-r-none"
             initial={{ opacity: 0, y: 18 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.35 }}
@@ -1119,9 +1153,9 @@ export default function App() {
             />
           </motion.div>
 
-          <div className="order-2 flex min-h-0 flex-col rounded-3xl bg-[rgba(255,255,255,0.85)] p-6 backdrop-blur-[10px] shadow-[0_20px_50px_rgba(0,0,0,0.05)] md:rounded-l-none md:p-8 md:h-full">
+          <div className="order-2 flex min-h-0 w-full flex-col rounded-3xl bg-[rgba(255,255,255,0.85)] p-6 backdrop-blur-[10px] shadow-[0_20px_50px_rgba(0,0,0,0.05)] md:rounded-l-none md:p-8 md:h-full">
             <div className="shrink-0 text-2xl font-bold text-[#007AFF] md:text-3xl">创新药使用指南</div>
-            <div className="mt-5 min-h-0 flex-1 overflow-hidden">
+            <div className="mt-5 min-h-0 flex-1 overflow-hidden overflow-x-visible">
               <Module2Calculator />
             </div>
           </div>
@@ -1138,5 +1172,6 @@ export default function App() {
     </div>
   );
 }
+
 
 
