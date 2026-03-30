@@ -324,7 +324,7 @@ function DoseAndNoteCell({ dose, note }) {
         <span
           className={[
             hasDose ? "ml-1.5" : "",
-            "inline-block text-[12px] font-normal italic leading-snug text-slate-400"
+            "inline text-[12px] font-normal italic leading-snug text-slate-400 break-words whitespace-normal"
           ].join(" ")}
         >
           {noteText}
@@ -352,7 +352,9 @@ function Module2Calculator() {
   }, [drug, plan, firstDate]);
 
   /** @type {Array<DrugKey>} */
-  const drugOrder = ["obinutuzumab", "pola", "glofit", "mosun"];
+  // Pill Toggle 2x2：左到右顺序
+  // 维泊妥珠单抗 -> 格菲妥珠单抗 -> 奥妥珠单抗 -> 莫妥珠单抗
+  const drugOrder = ["pola", "glofit", "obinutuzumab", "mosun"];
 
   /** @type {React.MutableRefObject<HTMLDivElement|null>} */
   const pillGridRef = useRef(null);
@@ -451,14 +453,14 @@ function Module2Calculator() {
 
       {/* Table */}
       <div className="mt-4 min-h-0 flex-1 overflow-hidden rounded-2xl border border-slate-200/70 bg-[rgba(255,255,255,0.65)] backdrop-blur-[10px]">
-        <div className="max-h-[min(520px,56vh)] overflow-auto">
-          <table className="w-full min-w-[560px] border-collapse table-fixed text-left text-sm">
+        <div className="max-h-[min(520px,56vh)] overflow-x-auto overflow-y-auto">
+          <table className="w-full min-w-[520px] border-collapse table-auto text-left text-sm">
             <thead className="sticky top-0 z-10 bg-[#3B82F6] text-white">
               <tr>
-                <th className="min-w-[72px] px-3 py-2.5 text-left text-xs font-bold">#</th>
-                <th className="w-[34%] px-4 py-2.5 text-left text-xs font-bold">描述</th>
-                <th className="w-[22%] px-4 py-2.5 text-left text-xs font-bold">具体日期</th>
-                <th className="w-[36%] px-2 py-2.5 text-left text-xs font-bold">剂量与关键备注</th>
+                <th className="w-[60px] px-2 py-2.5 text-left text-xs font-bold whitespace-nowrap">#</th>
+                <th className="min-w-[240px] px-4 py-2.5 text-left text-xs font-bold whitespace-nowrap">描述</th>
+                <th className="w-[180px] px-4 py-2.5 text-left text-xs font-bold whitespace-nowrap">具体日期</th>
+                <th className="px-2 py-2.5 text-left text-xs font-bold">剂量与关键备注</th>
               </tr>
             </thead>
             <tbody>
@@ -471,20 +473,20 @@ function Module2Calculator() {
                   ].join(" ")}
                 >
                   {/* 时间轴 */}
-                  <td className="px-3 py-2 align-top">
+                  <td className="w-[60px] px-2 py-2 align-top">
                     <div className="flex items-stretch gap-2">
                       <div className="mt-1 h-full w-[2px] border-r-2 border-dashed border-[#93c5fd]/90" />
-                      <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#E8F4FF] text-xs font-bold text-[#007AFF]">
+                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#E8F4FF] text-xs font-bold text-[#007AFF]">
                         {row.index}
                       </div>
                     </div>
                   </td>
 
-                  <td className="px-4 py-2 align-top text-slate-800">{row.desc}</td>
-                  <td className="whitespace-nowrap px-4 py-2 align-top text-sm text-slate-800">
+                  <td className="px-4 py-2 align-top whitespace-nowrap text-slate-800">{row.desc}</td>
+                  <td className="whitespace-nowrap px-4 py-2 align-top font-mono text-xs text-slate-800">
                     {formatDate(row.date)}
                   </td>
-                  <td className="min-w-0 px-2 py-2 align-top">
+                  <td className="min-w-0 px-2 py-2 align-top whitespace-normal">
                     <DoseAndNoteCell dose={row.dose} note={row.note} />
                   </td>
                 </tr>
@@ -518,8 +520,8 @@ function parseL1Description(text) {
   /** @type {Array<{label: string, value: string}>} */
   const rows = [];
 
-  // 优先按“作用/亮点/局限…”这种字段拆分（允许有/无冒号）
-  const keys = ["作用", "亮点", "局限", "定义", "举例", "共同特点", "一句话总结"];
+  // 优先按“性质/准入门槛/保费与保额…”这种字段拆分（允许有/无冒号）
+  const keys = ["性质", "准入门槛", "保费与保额", "保障范围", "理赔门槛", "定位", "定义", "举例", "共同特点"];
   const keyRe = new RegExp("(" + keys.join("|") + ")\\s*：?", "g");
   const matches = Array.from(raw.matchAll(keyRe));
 
@@ -1032,9 +1034,9 @@ export default function App() {
                   className="grid gap-4 md:grid-cols-3"
                 >
                   {[
-                    { icon: ShieldCheck, title: "居民基本医保", desc: "基础保障 · 清单内报销" },
-                    { icon: Sparkles, title: "惠民保", desc: "低门槛 · 补充大额费用" },
-                    { icon: HeartPulse, title: "商业保险", desc: "更高保额 · 产品差异大" }
+                    { icon: ShieldCheck, title: "基本医保", desc: "保基本 · 广覆盖" },
+                    { icon: Sparkles, title: "惠民保", desc: "普惠 · 低门槛" },
+                    { icon: HeartPulse, title: "商业保险", desc: "全面 · 高保障" }
                   ].map((c, idx) => (
                     <motion.div
                       key={idx}
@@ -1067,32 +1069,32 @@ export default function App() {
 
       {/* Module 2 */}
       <Section id="drugs" className="pt-20">
-        <motion.div
-          className="flex h-[100svh] max-h-[100svh] min-h-[100svh] flex-col overflow-hidden rounded-3xl bg-[rgba(255,255,255,0.85)] backdrop-blur-[10px] shadow-[0_20px_50px_rgba(0,0,0,0.05)]"
-          initial={{ opacity: 0, y: 18 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.35 }}
-          transition={{ duration: 0.55 }}
-        >
-          <div className="shrink-0 basis-[40%] overflow-hidden">
+        <div className="grid gap-6 md:min-h-[60vh] md:grid-cols-2 md:items-stretch md:gap-0">
+          <motion.div
+            className="order-1 min-h-full overflow-visible rounded-3xl bg-[rgba(255,255,255,0.85)] backdrop-blur-[10px] shadow-[0_20px_50px_rgba(0,0,0,0.05)] md:h-full md:rounded-r-none"
+            initial={{ opacity: 0, y: 18 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.35 }}
+            transition={{ duration: 0.55 }}
+          >
             <img
               src="/assets/drugs_bg.jpg"
               alt="drugs background"
-              className="h-full w-full object-cover object-center md:object-[center_73%]"
+              className="mask-fade-x h-full w-full object-contain object-center"
               onError={(e) => {
                 // 兜底：你没放 jpg 时仍能看到背景
                 e.currentTarget.src = "/assets/drugs_bg.svg";
               }}
             />
-          </div>
+          </motion.div>
 
-          <div className="flex min-h-0 basis-[70%] flex-col p-6 md:p-8">
+          <div className="order-2 flex min-h-0 flex-col rounded-3xl bg-[rgba(255,255,255,0.85)] p-6 backdrop-blur-[10px] shadow-[0_20px_50px_rgba(0,0,0,0.05)] md:rounded-l-none md:p-8 md:h-full">
             <div className="shrink-0 text-2xl font-bold text-[#007AFF] md:text-3xl">创新药使用指南</div>
             <div className="mt-5 min-h-0 flex-1 overflow-hidden">
               <Module2Calculator />
             </div>
           </div>
-        </motion.div>
+        </div>
       </Section>
 
       {/* Footer */}
@@ -1105,4 +1107,5 @@ export default function App() {
     </div>
   );
 }
+
 
