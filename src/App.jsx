@@ -1132,15 +1132,14 @@ export default function App() {
 
       {/* Module 2 */}
       <Section id="drugs" className="pt-20">
-        <div className="container mx-auto px-5">
-          <div className="grid gap-6 md:min-h-[60vh] md:grid-cols-2 md:items-stretch md:gap-0 overflow-hidden rounded-3xl bg-white shadow-xl">
-            <motion.div
-              className="order-1 min-h-full w-full overflow-visible rounded-3xl bg-[rgba(255,255,255,0.85)] backdrop-blur-[10px] shadow-[0_20px_50px_rgba(0,0,0,0.05)] md:h-full md:rounded-r-none"
-              initial={{ opacity: 0, y: 18 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.35 }}
-              transition={{ duration: 0.55 }}
-            >
+        <div className="grid gap-6 md:min-h-[60vh] md:grid-cols-2 md:items-stretch md:gap-0">
+          <motion.div
+            className="order-1 min-h-full w-full overflow-visible rounded-3xl bg-[rgba(255,255,255,0.85)] backdrop-blur-[10px] shadow-[0_20px_50px_rgba(0,0,0,0.05)] md:h-full md:rounded-r-none"
+            initial={{ opacity: 0, y: 18 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.35 }}
+            transition={{ duration: 0.55 }}
+          >
             <img
               src="/assets/drugs_bg.jpg"
               alt="drugs background"
