@@ -453,63 +453,44 @@ function Module2Calculator() {
 
       {/* Table */}
       <div className="mt-4 min-h-0 min-w-0 flex-1 overflow-hidden rounded-2xl border border-slate-200/70 bg-[rgba(255,255,255,0.65)] backdrop-blur-[10px]">
-        <div className="max-h-[min(520px,56vh)] overflow-x-auto overflow-y-auto custom-scrollbar">
-          <table className="min-w-full border-collapse text-left text-xs sm:text-sm" style={{ width: "max-content", minWidth: "100%" }}>
-            <thead className="sticky top-0 z-10 bg-[#3B82F6] text-white">
+        <div className="max-w-full overflow-hidden">
+          <div className="max-h-[min(520px,56vh)] overflow-x-auto overflow-y-auto custom-scrollbar">
+            <table className="table-fixed w-full min-w-[480px] border-collapse text-left text-xs sm:text-sm">
+              <colgroup>
+                <col style={{ width: "80px" }} />
+                <col style={{ width: "100px" }} />
+                <col style={{ minWidth: "300px" }} />
+              </colgroup>
+              <thead>
               <tr>
-                <th className="sticky left-0 z-30 w-[32px] min-w-[32px] px-1 py-2.5 text-left text-xs font-bold whitespace-nowrap bg-[#3B82F6]"> </th>
-                <th className="sticky left-[32px] z-30 w-[94px] min-w-[94px] shrink-0 flex-shrink-0 whitespace-nowrap px-2 py-2.5 text-left text-xs font-bold bg-[#3B82F6]">描述</th>
-                <th className="sticky left-[126px] z-30 w-[100px] min-w-[100px] shrink-0 flex-shrink-0 whitespace-nowrap px-2 py-2.5 text-left text-xs font-bold bg-[#3B82F6]">具体日期</th>
-                <th className="px-2 py-2.5 text-left text-xs font-bold">备注</th>
+                <th className="sticky top-0 left-0 z-30 w-[80px] min-w-[80px] whitespace-nowrap bg-slate-50 px-2 py-2.5 text-left text-xs font-bold">环节</th>
+                <th className="sticky top-0 left-[80px] z-30 w-[100px] min-w-[100px] whitespace-nowrap border-r border-slate-200 bg-slate-50 px-2 py-2.5 text-left text-xs font-bold">日期</th>
+                <th className="sticky top-0 z-30 min-w-[300px] bg-slate-50 px-2 py-2.5 text-left text-xs font-bold">备注</th>
               </tr>
-            </thead>
-            <tbody>
-              {schedule.map((row, idx) => (
-                <tr
-                  key={row.index}
-                  className={[
-                    "border-t border-slate-200/60",
-                    idx % 2 === 0 ? "bg-white" : "bg-[rgba(59,130,246,0.03)]"
-                  ].join(" ")}
-                >
-                  {/* 时间轴 */}
-                  <td
+              </thead>
+              <tbody>
+                {schedule.map((row, idx) => (
+                  <tr
+                    key={row.index}
                     className={[
-                      "sticky left-0 z-20 w-[32px] min-w-[32px] px-1 py-2 align-top",
+                      "border-t border-slate-200/60",
                       idx % 2 === 0 ? "bg-white" : "bg-[rgba(59,130,246,0.03)]"
                     ].join(" ")}
                   >
-                    <div className="flex items-stretch gap-1">
-                      <div className="mt-1 h-full w-[2px] border-r-2 border-dashed border-[#93c5fd]/90" />
-                      <div className="flex h-5 w-5 items-center justify-center rounded-full bg-[#E8F4FF] text-[10px] font-bold text-[#007AFF]">
-                        {row.index}
-                      </div>
-                    </div>
-                  </td>
-
-                  <td
-                    className={[
-                      "sticky left-[32px] z-20 w-[94px] min-w-[94px] shrink-0 flex-shrink-0 whitespace-nowrap px-2 py-2 align-top text-slate-800",
-                      idx % 2 === 0 ? "bg-white" : "bg-[rgba(59,130,246,0.03)]"
-                    ].join(" ")}
-                  >
-                    {row.desc}
-                  </td>
-                  <td
-                    className={[
-                      "sticky left-[126px] z-20 w-[100px] min-w-[100px] shrink-0 flex-shrink-0 whitespace-nowrap px-2 py-2 align-top font-mono text-xs text-slate-800",
-                      idx % 2 === 0 ? "bg-white" : "bg-[rgba(59,130,246,0.03)]"
-                    ].join(" ")}
-                  >
-                    {formatDate(row.date)}
-                  </td>
-                  <td className="min-w-[420px] px-2 py-2 align-top whitespace-nowrap">
-                    <DoseAndNoteCell dose={row.dose} note={row.note} />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                    <td className="sticky left-0 z-20 w-[80px] min-w-[80px] whitespace-nowrap bg-white px-2 py-2 align-top text-slate-800">
+                      {row.desc}
+                    </td>
+                    <td className="sticky left-[80px] z-20 w-[100px] min-w-[100px] whitespace-nowrap border-r border-slate-200 bg-white px-2 py-2 align-top font-mono text-xs text-slate-800">
+                      {formatDate(row.date)}
+                    </td>
+                    <td className="min-w-[300px] px-2 py-2 align-top whitespace-nowrap">
+                      <DoseAndNoteCell dose={row.dose} note={row.note} />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
@@ -1187,10 +1168,3 @@ export default function App() {
     </div>
   );
 }
-
-
-
-
-
-
-
