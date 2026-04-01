@@ -465,12 +465,12 @@ function Module2Calculator() {
       {/* Table */}
       <div className="mt-4 min-h-0 min-w-0 flex-1 overflow-hidden rounded-2xl bg-[rgba(255,255,255,0.65)] backdrop-blur-[10px]">
         <div className="relative isolate max-h-[min(520px,56vh)] overflow-x-auto overflow-y-auto custom-scrollbar">
-          <table className="w-[788px] min-w-full border-collapse table-fixed text-left text-xs sm:text-sm">
+          <table className="w-[780px] min-w-full border-collapse table-fixed text-left text-xs sm:text-sm">
             <thead className="sticky top-0 z-[80] bg-[#3B82F6] text-white">
               <tr>
                 <th className="sticky left-0 z-[60] w-[32px] min-w-[32px] px-1 py-2.5 text-left text-xs font-bold whitespace-nowrap bg-[#3B82F6]"> </th>
                 <th className="sticky left-[32px] z-[60] w-[102px] min-w-[102px] shrink-0 flex-shrink-0 whitespace-nowrap px-2 py-2.5 text-left text-xs font-bold bg-[#3B82F6]">描述</th>
-                <th className="sticky left-[134px] z-[60] w-[100px] min-w-[100px] shrink-0 flex-shrink-0 whitespace-nowrap px-2 py-2.5 text-left text-xs font-bold bg-[#3B82F6]">具体日期</th>
+                <th className="sticky left-[134px] z-[60] w-[92px] min-w-[92px] shrink-0 flex-shrink-0 whitespace-nowrap px-2 py-2.5 text-left text-xs font-bold bg-[#3B82F6]">具体日期</th>
                 <th className="w-[554px] min-w-[554px] px-2 py-2.5 text-left text-xs font-bold">备注</th>
               </tr>
             </thead>
@@ -507,7 +507,7 @@ function Module2Calculator() {
                   </td>
                   <td
                     className={[
-                      "sticky left-[134px] z-30 w-[100px] min-w-[100px] shrink-0 flex-shrink-0 whitespace-nowrap px-2 py-2 align-top font-mono tabular-nums text-xs text-slate-800",
+                      "sticky left-[134px] z-30 w-[92px] min-w-[92px] shrink-0 flex-shrink-0 whitespace-nowrap px-2 py-2 align-top font-mono tabular-nums text-xs text-slate-800",
                       idx % 2 === 0 ? "bg-white" : "bg-[#F5F9FF]"
                     ].join(" ")}
                   >
