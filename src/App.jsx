@@ -339,22 +339,18 @@ function DoseAndNoteCell({ dose, note }) {
   const noteText = hasNote ? String(note) : "";
 
   return (
-    <div className="mt-2 w-full rounded-xl bg-slate-50 p-3 text-sm leading-relaxed text-slate-600">
-      <div className="min-w-0 text-left">
-        {hasDose ? <span className="font-bold text-[#3B82F6]">{dose}</span> : null}
-        {hasNote ? (
-          <span
-            className={[
-              hasDose ? "ml-1.5" : "",
-              "inline text-[12px] font-normal italic leading-snug text-slate-500"
-            ].join(" ")}
-          >
-            {noteText}
-          </span>
-        ) : !hasDose ? (
-          <span className="text-[12px] text-slate-400">暂无备注</span>
-        ) : null}
-      </div>
+    <div className="min-w-0 text-left whitespace-nowrap">
+      {hasDose ? <span className="font-bold text-[#3B82F6]">{dose}</span> : null}
+      {hasNote ? (
+        <span
+          className={[
+            hasDose ? "ml-1.5" : "",
+            "inline text-[11px] sm:text-[12px] font-normal italic leading-snug text-slate-400 whitespace-nowrap"
+          ].join(" ")}
+        >
+          {noteText}
+        </span>
+      ) : null}
     </div>
   );
 }
@@ -375,24 +371,28 @@ function Module2Calculator() {
     const start = parseDateInput(firstDate);
     return generateSchedule(drug, plan, start);
   }, [drug, plan, firstDate]);
+
   const intervalDays = useMemo(() => {
     return schedule.map((_, i) => (i === 0 ? 0 : dayDiff(schedule[i].date, schedule[i - 1].date)));
   }, [schedule]);
+
   const [editableSchedule, setEditableSchedule] = useState(/** @type {Array<ScheduleRow>} */ ([]));
   const [editingRow, setEditingRow] = useState(/** @type {number|null} */ (null));
-  const [needConfirmShift, setNeedConfirmShift] = useState(true);
-  const [toastVisible, setToastVisible] = useState(false);
+  const [manuallyEditedRow, setManuallyEditedRow] = useState(/** @type {number|null} */ (null));
+  const [shiftedRows, setShiftedRows] = useState(/** @type {Array<number>} */ ([]));
 
   useEffect(() => {
     setEditableSchedule(schedule.map((r) => ({ ...r, date: cloneDate(r.date) })));
     setEditingRow(null);
+    setManuallyEditedRow(null);
+    setShiftedRows([]);
   }, [schedule]);
 
   useEffect(() => {
-    if (!toastVisible) return;
-    const t = window.setTimeout(() => setToastVisible(false), 2200);
+    if (!shiftedRows.length) return;
+    const t = window.setTimeout(() => setShiftedRows([]), 1800);
     return () => window.clearTimeout(t);
-  }, [toastVisible]);
+  }, [shiftedRows]);
 
   const today = cloneDate(new Date());
   const nextUpcomingIndex = useMemo(() => {
@@ -414,26 +414,27 @@ function Module2Calculator() {
       setEditingRow(null);
       return;
     }
-    const anchorDate = parseDateInput(value);
 
+    const anchorDate = parseDateInput(value);
     const target = editableSchedule.find((r) => r.index === rowIndex);
     if (!target) {
       setEditingRow(null);
       return;
     }
-    const oldDateStr = formatDate(target.date);
-    const newDateStr = formatDate(anchorDate);
-    if (oldDateStr === newDateStr) {
+
+    if (formatDate(target.date) === formatDate(anchorDate)) {
       setEditingRow(null);
       return;
     }
-    if (needConfirmShift) {
-      const ok = window.confirm("确认修改该日期吗？后续治疗日期将按既定间隔自动顺延。");
-      if (!ok) {
-        setEditingRow(null);
-        return;
-      }
+
+    const ok = window.confirm("检测到日期变更，是否同步顺延后续所有用药计划？");
+    if (!ok) {
+      setEditingRow(null);
+      return;
     }
+
+    setManuallyEditedRow(rowIndex);
+    setShiftedRows(editableSchedule.filter((r) => r.index > rowIndex).map((r) => r.index));
 
     setEditableSchedule((prev) => {
       const rows = prev.map((r) => ({ ...r, date: cloneDate(r.date) }));
@@ -446,7 +447,7 @@ function Module2Calculator() {
       }
       return rows;
     });
-    setToastVisible(true);
+
     setEditingRow(null);
   }
 
@@ -486,20 +487,6 @@ function Module2Calculator() {
 
   return (
     <div className="flex min-h-0 min-w-0 flex-col font-sans">
-      <AnimatePresence>
-        {toastVisible ? (
-          <motion.div
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.2 }}
-            className="fixed left-1/2 top-5 z-[120] -translate-x-1/2 rounded-full bg-slate-900/90 px-4 py-2 text-xs text-white shadow-lg backdrop-blur"
-          >
-            治疗计划已根据新的时间点自动顺延
-          </motion.div>
-        ) : null}
-      </AnimatePresence>
-
       {/* Pill Toggle：2x2 */}
       <div>
         <div className="relative rounded-3xl bg-[rgba(59,130,246,0.06)] p-1">
@@ -564,78 +551,15 @@ function Module2Calculator() {
         </label>
       </div>
 
-      <label className="mt-3 inline-flex items-center gap-2 self-start rounded-lg bg-slate-50 px-3 py-2 text-xs font-medium text-slate-600 ring-1 ring-slate-200">
-        <input
-          type="checkbox"
-          checked={needConfirmShift}
-          onChange={(e) => setNeedConfirmShift(e.target.checked)}
-          className="h-3.5 w-3.5 accent-[#3B82F6]"
-        />
-        修改日期前二次确认
-      </label>
-
-      {/* Mobile Card List */}
-      <div className="mt-4 space-y-2 sm:hidden">
-        {editableSchedule.map((row, idx) => {
-          const rowDate = cloneDate(row.date);
-          const isDone = rowDate.getTime() < today.getTime();
-          const isNext = !isDone && nextUpcomingIndex === row.index;
-          return (
-            <div
-              key={row.index}
-              className={[
-                "w-full rounded-2xl px-4 py-4 shadow-sm ring-1 ring-slate-200/70 backdrop-blur",
-                idx % 2 === 0 ? "bg-white" : "bg-slate-50/50"
-              ].join(" ")}
-            >
-              <div className="flex items-center justify-between gap-2">
-                <div className="inline-flex items-center gap-2">
-                  {isDone ? <CheckCircle2 className="h-4 w-4 text-emerald-500" /> : null}
-                  {isNext ? (
-                    <span className="relative inline-flex h-2.5 w-2.5">
-                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-sky-400 opacity-70" />
-                      <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-sky-500" />
-                    </span>
-                  ) : null}
-                  <span className={isDone ? "text-slate-400" : "text-slate-800"}>{row.desc}</span>
-                  {isNext ? <span className="rounded bg-sky-100 px-1.5 py-0.5 text-[10px] text-sky-700">建议用药日</span> : null}
-                </div>
-                {editingRow === row.index ? (
-                  <input
-                    type="date"
-                    autoFocus
-                    defaultValue={formatDate(row.date)}
-                    onChange={(e) => applyDateChange(row.index, e.target.value)}
-                    className="w-[122px] border-0 bg-transparent p-0 font-mono tabular-nums text-xs text-[#0B3D91] outline-none"
-                  />
-                ) : (
-                  <button
-                    type="button"
-                    className="group inline-flex items-center gap-1 rounded px-1 py-0.5 font-mono tabular-nums text-xs text-slate-700 hover:bg-[#E8F1FF]"
-                    onClick={() => startEditDate(row.index)}
-                  >
-                    <span>{formatDateDisplay(row.date)}</span>
-                    <CalendarDays className="h-3.5 w-3.5 text-slate-500 opacity-40 transition-opacity group-hover:opacity-90" />
-                  </button>
-                )}
-              </div>
-              <div className="w-full">
-                <DoseAndNoteCell dose={row.dose} note={row.note} />
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
       {/* Table */}
-      <div className="mt-4 hidden min-h-0 min-w-0 flex-1 overflow-hidden rounded-2xl bg-[rgba(255,255,255,0.65)] backdrop-blur-[10px] sm:block">
+      <div className="mt-4 min-h-0 min-w-0 flex-1 overflow-hidden rounded-2xl bg-[rgba(255,255,255,0.65)] backdrop-blur-[10px]">
         <div className="relative isolate max-h-[min(520px,56vh)] overflow-x-auto overflow-y-auto custom-scrollbar">
-          <table className="w-[788px] min-w-full border-collapse table-fixed text-left text-xs sm:text-sm">
-            <thead className="sticky top-0 z-[80] relative bg-[#3B82F6]/90 text-white backdrop-blur-md before:pointer-events-none before:absolute before:inset-x-0 before:bottom-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/75 before:to-transparent">
+          <table className="w-[780px] min-w-full border-collapse table-fixed text-left text-xs sm:text-sm">
+            <thead className="sticky top-0 z-[80] bg-[#3B82F6] text-white">
               <tr>
                 <th className="sticky left-0 z-[60] w-[32px] min-w-[32px] px-1 py-2.5 text-left text-xs font-bold whitespace-nowrap bg-[#3B82F6]"> </th>
                 <th className="sticky left-[32px] z-[60] w-[102px] min-w-[102px] shrink-0 flex-shrink-0 whitespace-nowrap px-2 py-2.5 text-left text-xs font-bold bg-[#3B82F6]">描述</th>
-                <th className="sticky left-[134px] z-[60] w-[100px] min-w-[100px] shrink-0 flex-shrink-0 whitespace-nowrap px-2 py-2.5 text-left text-xs font-bold bg-[#3B82F6]">具体日期</th>
+                <th className="sticky left-[134px] z-[60] w-[92px] min-w-[92px] shrink-0 flex-shrink-0 whitespace-nowrap px-2 py-2.5 text-left text-xs font-bold bg-[#3B82F6]">具体日期</th>
                 <th className="w-[554px] min-w-[554px] px-2 py-2.5 text-left text-xs font-bold">备注</th>
               </tr>
             </thead>
@@ -644,75 +568,83 @@ function Module2Calculator() {
                 const rowDate = cloneDate(row.date);
                 const isDone = rowDate.getTime() < today.getTime();
                 const isNext = !isDone && nextUpcomingIndex === row.index;
+                const isManualEdited = manuallyEditedRow === row.index;
+                const isShifted = shiftedRows.includes(row.index);
+
                 return (
-                  <tr
-                    key={row.index}
+                <tr
+                  key={row.index}
+                  className={[
+                    idx % 2 === 0 ? "bg-white" : "bg-[#F5F9FF]",
+                    isShifted ? "animate-pulse" : ""
+                  ].join(" ")}
+                >
+                  {/* 时间轴 */}
+                  <td
                     className={[
-                      "border-b border-slate-100",
+                      "sticky left-0 z-30 w-[32px] min-w-[32px] px-1 py-2 align-top",
                       idx % 2 === 0 ? "bg-white" : "bg-[#F5F9FF]"
                     ].join(" ")}
                   >
-                    <td
-                      className={[
-                        "sticky left-0 z-30 w-[32px] min-w-[32px] px-1 py-2 align-top",
-                        idx % 2 === 0 ? "bg-white" : "bg-[#F5F9FF]"
-                      ].join(" ")}
-                    >
-                      <div className="flex items-stretch gap-1">
-                        <div className="mt-1 h-full w-[2px] bg-[#93c5fd]/90" />
-                        <div className="flex h-5 w-5 items-center justify-center rounded-full bg-[#E8F4FF] text-[10px] font-bold text-[#007AFF]">
-                          {row.index}
-                        </div>
+                    <div className="flex items-stretch gap-1">
+                      <div className="mt-1 h-full w-[2px] bg-[#93c5fd]/90" />
+                      <div className="flex h-5 w-5 items-center justify-center rounded-full bg-[#E8F4FF] text-[10px] font-bold text-[#007AFF]">
+                        {row.index}
                       </div>
-                    </td>
+                    </div>
+                  </td>
 
-                    <td
-                      className={[
-                        "sticky left-[32px] z-30 w-[102px] min-w-[102px] shrink-0 flex-shrink-0 whitespace-nowrap px-2 py-2 align-top",
-                        idx % 2 === 0 ? "bg-white" : "bg-[#F5F9FF]"
-                      ].join(" ")}
-                    >
-                      <div className="inline-flex items-center gap-1.5">
-                        {isDone ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" /> : null}
-                        {isNext ? (
-                          <span className="relative inline-flex h-2 w-2">
-                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-sky-400 opacity-70" />
-                            <span className="relative inline-flex h-2 w-2 rounded-full bg-sky-500" />
-                          </span>
-                        ) : null}
-                        <span className={isDone ? "text-slate-400" : "text-slate-800"}>{row.desc}</span>
-                        {isNext ? <span className="rounded bg-sky-100 px-1 py-[1px] text-[10px] text-sky-700">建议用药日</span> : null}
-                      </div>
-                    </td>
-                    <td
-                      className={[
-                        "sticky left-[134px] z-30 w-[100px] min-w-[100px] shrink-0 flex-shrink-0 whitespace-nowrap px-2 py-2 align-top font-mono tabular-nums text-xs text-slate-800",
-                        idx % 2 === 0 ? "bg-white" : "bg-[#F5F9FF]"
-                      ].join(" ")}
-                    >
-                      {editingRow === row.index ? (
-                        <input
-                          type="date"
-                          autoFocus
-                          defaultValue={formatDate(row.date)}
-                          onChange={(e) => applyDateChange(row.index, e.target.value)}
-                          className="w-[88px] border-0 bg-transparent p-0 font-mono tabular-nums text-xs text-[#0B3D91] outline-none"
-                        />
-                      ) : (
-                        <button
-                          type="button"
-                          className="group inline-flex items-center gap-1 rounded px-0.5 py-0.5 hover:bg-[#E8F1FF]"
-                          onClick={() => startEditDate(row.index)}
-                        >
-                          <span>{formatDateDisplay(row.date)}</span>
-                          <CalendarDays className="h-3.5 w-3.5 text-slate-500 opacity-40 transition-opacity group-hover:opacity-90" />
-                        </button>
-                      )}
-                    </td>
-                    <td className="w-[554px] min-w-[554px] px-2 py-2 align-top">
-                      <DoseAndNoteCell dose={row.dose} note={row.note} />
-                    </td>
-                  </tr>
+                  <td
+                    className={[
+                      "sticky left-[32px] z-30 w-[102px] min-w-[102px] shrink-0 flex-shrink-0 whitespace-nowrap px-2 py-2 align-top text-slate-800",
+                      idx % 2 === 0 ? "bg-white" : "bg-[#F5F9FF]"
+                    ].join(" ")}
+                  >
+                    <div className="inline-flex items-center gap-1.5">
+                      {isDone ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" /> : null}
+                      {isNext ? (
+                        <span className="relative inline-flex h-2 w-2">
+                          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-sky-400 opacity-70" />
+                          <span className="relative inline-flex h-2 w-2 rounded-full bg-sky-500" />
+                        </span>
+                      ) : null}
+                      <span className={isDone ? "text-slate-400" : "text-slate-800"}>{row.desc}</span>
+                      {isNext ? <span className="rounded bg-sky-100 px-1 py-[1px] text-[10px] text-sky-700">建议用药日</span> : null}
+                    </div>
+                  </td>
+                  <td
+                    className={[
+                      "sticky left-[134px] z-30 w-[92px] min-w-[92px] shrink-0 flex-shrink-0 whitespace-nowrap px-2 py-2 align-top font-mono tabular-nums text-xs text-slate-800",
+                      idx % 2 === 0 ? "bg-white" : "bg-[#F5F9FF]"
+                    ].join(" ")}
+                  >
+                    {editingRow === row.index ? (
+                      <input
+                        type="date"
+                        autoFocus
+                        defaultValue={formatDate(row.date)}
+                        onChange={(e) => applyDateChange(row.index, e.target.value)}
+                        className="w-[82px] border-0 bg-transparent p-0 font-mono tabular-nums text-xs text-[#0B3D91] outline-none"
+                      />
+                    ) : (
+                      <button
+                        type="button"
+                        className={[
+                          "group inline-flex items-center gap-1 rounded px-0.5 py-0.5 hover:bg-[#E8F1FF]",
+                          isManualEdited ? "text-[#0B3D91] font-semibold" : ""
+                        ].join(" ")}
+                        onClick={() => startEditDate(row.index)}
+                      >
+                        <span>{formatDateDisplay(row.date)}</span>
+                        {isManualEdited ? <span className="rounded bg-blue-100 px-1 py-[1px] text-[10px] text-blue-700">已修正</span> : null}
+                        <CalendarDays className="h-3.5 w-3.5 text-slate-500 opacity-40 transition-opacity group-hover:opacity-90" />
+                      </button>
+                    )}
+                  </td>
+                  <td className="w-[554px] min-w-[554px] px-2 py-2 align-top whitespace-nowrap">
+                    <DoseAndNoteCell dose={row.dose} note={row.note} />
+                  </td>
+                </tr>
                 );
               })}
             </tbody>
@@ -1388,7 +1320,7 @@ export default function App() {
       <footer className="border-t border-slate-200 bg-white">
         <div className="mx-auto flex max-w-7xl flex-col gap-3 px-5 py-10 text-sm text-slate-500 md:flex-row md:items-center md:justify-between md:px-8">
           <div>提示：本页面为科普工具，具体政策以当地医保与产品条款为准。</div>
-          <div>© {new Date().getFullYear()} Roche. All rights reserved.</div>
+          <div>© {new Date().getFullYear()}. All rights reserved.</div>
         </div>
       </footer>
     </div>
