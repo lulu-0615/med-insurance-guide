@@ -635,13 +635,15 @@ function Module2Calculator() {
                       <button
                         type="button"
                         className={[
-                          "group inline-flex items-center gap-1 rounded px-0.5 py-0.5 hover:bg-[#E8F1FF]",
+                          "group inline-flex items-start gap-1 rounded px-0.5 py-0.5 hover:bg-[#E8F1FF]",
                           isManualEdited ? "text-[#0B3D91] font-semibold" : ""
                         ].join(" ")}
                         onClick={() => startEditDate(row.index)}
                       >
-                        <span>{formatDateDisplay(row.date)}</span>
-                        {isManualEdited ? <span className="rounded bg-blue-100 px-1 py-[1px] text-[10px] text-blue-700">已修正</span> : null}
+                        <span className="inline-flex flex-col gap-0.5 leading-none">
+                          {isManualEdited ? <span className="rounded bg-blue-100 px-1 py-[1px] text-[10px] text-blue-700">已修正</span> : null}
+                          <span>{formatDateDisplay(row.date)}</span>
+                        </span>
                         <CalendarDays className="h-3.5 w-3.5 text-slate-500 opacity-40 transition-opacity group-hover:opacity-90" />
                       </button>
                     )}
